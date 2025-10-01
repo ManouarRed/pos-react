@@ -1,0 +1,135 @@
+
+# POS Application Installation Guide for Shared Hosting
+
+This guide provides instructions for deploying the POS application on a shared hosting environment that supports Node.js and Git.
+
+## Prerequisites
+
+*   A shared hosting account with SSH access.
+*   Git, Node.js, and npm installed on the hosting environment.
+*   A MySQL database created on your hosting account. You will need the database name, username, and password.
+*   PM2 installed globally (`npm install -g pm2`).
+
+## Deployment Steps
+
+### 1. Clone the Repository
+
+Clone your application repository from GitHub to your hosting environment.
+
+```bash
+git clone <your-github-repository-url>
+cd <your-repository-directory>
+```
+
+### 2. Backend Setup
+
+The backend is a Node.js application that connects to the MySQL database.
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd back
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure environment variables:**
+    Create a `.env` file in the `back` directory with the following content. Replace the placeholder values with your actual database credentials and a secure JWT secret.
+
+    ```
+    DB_HOST=localhost
+    DB_USER=<your-database-user>
+    DB_PASSWORD=<your-database-password>
+    DB_NAME=<your-database-name>
+    JWT_SECRET=<your-super-secret-jwt-key>
+    CORS_ORIGIN=<your-frontend-domain> # e.g., https://yourdomain.com
+    ```
+
+4.  **Start the backend with PM2:**
+    PM2 will keep your backend running continuously.
+
+    ```bash
+    pm2 start server.js --name "pos-backend"
+    ```
+
+    Your backend should now be running. By default, it listens on port 3001.
+
+### 3. Frontend Setup
+
+The frontend is a React application built with Vite.
+
+1.  **Navigate to the frontend directory:**
+    ```bash
+    cd ../front
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Build the application:**
+    This command will create a `dist` directory containing the static frontend files.
+    ```bash
+    npm run build
+    ```
+
+### 4. Web Server Configuration
+
+You need to configure your web server (e.g., Apache or Nginx) to serve the frontend files and proxy API requests to your backend.
+
+1.  **Serve the frontend:**
+    Configure your web server's document root to point to the `front/dist` directory.
+
+2.  **Proxy API requests:**
+    You need to set up a reverse proxy to forward requests from `/api` to your backend server running on port 3001.
+
+    **Example for Nginx:**
+
+    ```nginx
+    server {
+        listen 80;
+        server_name yourdomain.com;
+
+        root /path/to/your/app/front/dist;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /api {
+            proxy_pass http://localhost:3001;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
+    ```
+
+    **Example for Apache (using `.htaccess` in `front/dist`):**
+
+    Make sure `mod_rewrite` and `mod_proxy` are enabled on your server.
+
+    ```apache
+    RewriteEngine On
+
+    # Proxy API requests to the backend
+    RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+
+    # Serve frontend files
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+    ```
+
+### 5. Final Steps
+
+*   Ensure your domain is pointing to your shared hosting server.
+*   Restart your web server after making configuration changes.
+*   Access your application via your domain.
+
