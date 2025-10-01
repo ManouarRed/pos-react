@@ -6,7 +6,7 @@ import { UNCATEGORIZED_ID, UNKNOWN_MANUFACTURER_ID } from '../constants';
 
 // For local development, this will now be proxied by Vite's dev server.
 // For production, ensure your reverse proxy (e.g., Nginx, Caddy) handles this correctly.
-const API_BASE_URL = '/api'; 
+const API_BASE_URL = 'https://backendpos.manouar.eu/api'; 
 
 interface ApiError {
   message: string;
