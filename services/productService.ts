@@ -43,7 +43,7 @@ export const productService = {
   // --- User Authentication & Management ---
   authenticateUser: async (username: string, passwordInput: string): Promise<User | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password: passwordInput }),
